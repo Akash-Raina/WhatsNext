@@ -1,19 +1,20 @@
 import { Request, Response } from "express";
-import { createRoom, joinRoom } from "../services/user.service";
+import { addToQueue, LeaveRoom, joinRoom, searchSong } from "../services/user.service";
 
-async function createRoomApi(req:Request, res: Response){
+
+
+async function LeaveRoomApi(req: Request, res:Response){
     try{
-        const uniqueRoomCode = await createRoom(req);
+        await LeaveRoom(req);
 
         res.status(201).json({
-            uniqueRoomCode,
-            message: 'Room Created Successfully'
+            message: 'Room Leaved Successfully'
         })
     }
     catch(error:unknown){
         if(error instanceof Error){
             res.status(500).json({
-                message: error.message
+                message : error.message
             })
         }
     }
@@ -35,4 +36,36 @@ async function joinRoomApi(req: Request, res: Response){
     }
 }
 
-export {createRoomApi, joinRoomApi  }
+async function searchSongApi(req: Request, res: Response){
+    try{
+        const data = await searchSong(req);
+
+        res.status(200).json({
+            data
+        })
+    }
+    catch(error:unknown){
+        if(error instanceof Error){
+            res.status(500).json({
+                message: error.message
+            })
+        }
+    }
+}
+
+async function addToQueueApi(req: Request, res: Response){
+    try{
+        await addToQueue(req);
+        res.status(201).json({
+            message: "Song added to Queue Successfully"
+        })
+    }
+    catch(error:unknown){
+        if(error instanceof Error)
+            res.status(500).json({
+                message: error.message
+            })
+    }
+}
+
+export {LeaveRoomApi, joinRoomApi, searchSongApi, addToQueueApi }
