@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { addToQueue, LeaveRoom, joinRoom, searchSong } from "../services/user.service";
+import { addToQueue, LeaveRoom, joinRoom, searchSong, upvoteSong } from "../services/user.service";
 
 
 
@@ -68,4 +68,20 @@ async function addToQueueApi(req: Request, res: Response){
     }
 }
 
-export {LeaveRoomApi, joinRoomApi, searchSongApi, addToQueueApi }
+async function upvoteSongApi(req: Request, res: Response){
+    try{
+        await upvoteSong(req);
+        res.status(201).json({
+            message : "song upvoted successfully"
+        })
+    }
+    catch(error: unknown){
+        if(error instanceof Error){
+            res.status(500).json({
+                message: error.message
+            })
+        }
+    }
+}
+
+export {LeaveRoomApi, joinRoomApi, searchSongApi, addToQueueApi, upvoteSongApi }

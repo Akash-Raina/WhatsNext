@@ -37,3 +37,12 @@ export const handleWebSocketConnection = async(ws: WebSocket, req: IncomingMessa
     }
   });
 };
+
+export function broadcastQueueUpdate(roomCode: string, queue: any[]) {
+  rooms.get(roomCode)?.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({ type: "queueUpdate", queue }));
+      }
+  });
+}
+

@@ -6,7 +6,7 @@ import getUserFingerprint from '../utils/userFingerPrint';
 import { createClient } from 'redis';
 import redisClient from '../config/redisClient';
 import axios from 'axios';
-import { rooms } from './ws.service';
+import { broadcastQueueUpdate, rooms } from './ws.service';
 import { CustomRequest } from '../types/customRequest';
 
 dotenv.config();
@@ -111,30 +111,92 @@ async function searchSong(req: Request){
     return videos;
 }
 
-async function addToQueue(req: Request){
-    const {roomCode, song} = req.body;
+async function addToQueue(req: Request) {
+    const { roomCode, song } = req.body;
 
-    if(!roomCode && !song){
-        throw new Error('Roomcode and song required')
+    if (!roomCode || !song) {
+        throw new Error('RoomCode and song are required');
     }
+
+    const userFingerPrint = getUserFingerprint(req);
 
     const queueKey = `queue:${roomCode}`;
+    const songKey = `queue:${roomCode}:${song.id}`;
 
-    await redisClient.rPush(queueKey, JSON.stringify({...song, upvotes: 0}))
-    console.log("inside room", rooms);
-    if(!rooms.has(roomCode)){
-        throw new Error("You are not in the room")
+    const exists = await redisClient.exists(songKey);
+    if (exists) {
+        throw new Error("Song already in queue.");
     }
 
+    await redisClient.rPush(queueKey, song.id);
+    await redisClient.hSet(songKey, { title: song?.title || "unknown", upvotes: 1, thumbnail: song?.thumbnail || null, channel: song?.channel || "unkown",  upvotedBy: userFingerPrint});
 
-    const queue = await redisClient.lRange(queueKey, 0, -1);
-        rooms.get(roomCode)?.forEach((client)=>{
-            if(client.readyState ===  WebSocket.OPEN){
-                client.send(JSON.stringify({type: 'queueUpdate', queue: queue.map(song => JSON.parse(song))}))
-            }
-    })
-    
+    if (rooms.has(roomCode)) {
+        const queue = await getUpdatedQueue(roomCode);
+        broadcastQueueUpdate(roomCode, queue);
+    }
+}
+
+async function upvoteSong(req: Request) {
+    const { roomCode, songId } = req.body;
+
+    if (!roomCode || !songId) {
+        throw new Error("RoomCode, songId are required");
+    }
+    const userFingerPrint = getUserFingerprint(req);
+
+    const songKey = `queue:${roomCode}:${songId}`;
+
+    const exists = await redisClient.exists(songKey);
+    if (!exists) {
+        throw new Error("Song not found in queue.");
+    }
+
+    const upvotedBy = await redisClient.hGet(songKey, "upvotedBy");
+
+    const upvotedUsers = new Set(upvotedBy ? upvotedBy.split(",") : []);
+
+    if (upvotedUsers.has(userFingerPrint)) {
+        throw new Error("You have already upvoted this song.");
+    }
+
+    upvotedUsers.add(userFingerPrint);
+    await redisClient.hSet(songKey, {
+        upvotes: await redisClient.hIncrBy(songKey, "upvotes", 1),
+        upvotedBy: Array.from(upvotedUsers).join(",")
+    });
+
+    if (rooms.has(roomCode)) {
+        const queue = await getUpdatedQueue(roomCode);
+        broadcastQueueUpdate(roomCode, queue);
+    }
+}
+
+
+async function getUpdatedQueue(roomCode: string) {
+    const queueKey = `queue:${roomCode}`;
+    const songIds = await redisClient.lRange(queueKey, 0, -1);
+
+    const queue = await Promise.all(
+        songIds.map(async (songId) => {
+            const songData = await redisClient.hGetAll(`queue:${roomCode}:${songId}`);
+            return {
+                id: songId,
+                title: songData.title || "Unknown Title",
+                upvotes: songData.upvotes ? Number(songData.upvotes) : 0, 
+            };
+        })
+    );
+    console.log('first');
+    queue.sort((a, b) => b.upvotes - a.upvotes);
+
+    console.log('queue', queue);
+    return queue;
 
 }
 
-export {joinRoom, LeaveRoom, searchSong, addToQueue}
+
+
+
+
+export {joinRoom, LeaveRoom, searchSong, addToQueue, upvoteSong}
