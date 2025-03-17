@@ -187,10 +187,7 @@ async function getUpdatedQueue(roomCode: string) {
             };
         })
     );
-    console.log('first');
     queue.sort((a, b) => b.upvotes - a.upvotes);
-
-    console.log('queue', queue);
     return queue;
 
 }

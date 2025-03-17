@@ -1,34 +1,17 @@
-import { useEffect, useState } from "react"
+import {BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import Home from "./pages/Home";
+import Room from "./pages/Room";
 
 function App() {
 
-  const [socket, setSocket] = useState<null | WebSocket>(null);
-  const [latestMessage, setLatestMessage] = useState("");
-  // const [message, setMessage] = useState("");
-
-  useEffect(()=>{
-    const socket = new WebSocket('ws://localhost:8080');
-    socket.onopen = () =>{
-      setSocket(socket);
-    }
-    socket.onmessage = (message)=>{
-      setLatestMessage(message.data)
-    }
-
-    return ()=>{
-      socket.close();
-    }
-  }, [])
-
-  if(!socket){
-    return <div>
-       Connecting to the socket server...
-    </div>
-  }
-
   return (
     <>
-    <h1 className="border">{latestMessage}</h1>
+      <Router>
+        <Routes>
+          <Route path="/" element= {<Home/>}/>
+          <Route path="/:roomCode" element ={<Room/>}/>
+        </Routes>
+      </Router>
     </>
   )
 }

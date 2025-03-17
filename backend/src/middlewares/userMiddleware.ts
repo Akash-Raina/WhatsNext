@@ -5,15 +5,14 @@ import { CustomRequest } from "../types/customRequest";
 
 
 export function extractRoomCode(req: CustomRequest, res: Response, next: NextFunction) {
-    const params = new URLSearchParams(req.url?.split("?")[1]);
-    const roomcode = params.get('roomcode');
+    const {roomCode} = req.body
 
-    if (!roomcode) {
+    if (!roomCode) {
         res.status(400).json({ error: "Room code is required!" });
         return
     }
 
-    req.roomCode = roomcode; 
+    req.roomCode = roomCode; 
     next();
 }
 

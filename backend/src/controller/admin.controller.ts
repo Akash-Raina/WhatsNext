@@ -3,10 +3,10 @@ import { createRoom, deleteRoom } from "../services/admin.service";
 
 async function createRoomApi(req:Request, res: Response){
     try{
-        const uniqueRoomCode = await createRoom(req);
+        const roomCode = await createRoom(req);
 
         res.status(201).json({
-            uniqueRoomCode,
+            roomCode,
             message: 'Room Created Successfully'
         })
     }
