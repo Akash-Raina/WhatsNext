@@ -19,7 +19,36 @@ async function createRoom(req: Request){
     const roomKey = `room:${uniqueRoomCode}`;
     await redisClient.hSet(roomKey, { adminFingerPrintId, createdAt: Date.now() });
 
+    await redisClient.expire(roomKey, 10800);
+    
     return uniqueRoomCode;
+}
+
+async function cancelJoiningRoom(req: Request){
+    console.log('api called')
+    const {roomCode} = req.body;
+    if(!roomCode){
+        throw new Error('Room Code is required')
+    }
+
+    const userFingerPrintId = getUserFingerprint(req);
+
+    if (!userFingerPrintId) {
+        throw new Error("Invalid user fingerprint!");
+    }
+
+    const roomKey = `room:${roomCode}`;
+
+    const adminFingerPrint = await redisClient.hGet(roomKey, "adminFingerPrintId");
+
+    if (userFingerPrintId === adminFingerPrint) {
+        const result = await redisClient.del(`room:${roomCode}`);
+        if (result === 1) {
+            return
+        } else {
+            throw new Error("Room doesn't exists")
+        }
+    }
 }
 
 async function deleteRoom(req:Request) {
@@ -49,4 +78,5 @@ async function deleteRoom(req:Request) {
     }
 
 }
-export {createRoom, deleteRoom}
+
+export {createRoom, cancelJoiningRoom, deleteRoom}

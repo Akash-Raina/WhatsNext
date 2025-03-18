@@ -83,7 +83,7 @@ async function LeaveRoom(req: CustomRequest){
 }
 
 async function searchSong(req: Request){
-    const query = req.query.q as string;
+    const query = req.query.query as string;
 
     if(!query){
         throw new Error('Search Query is required');
@@ -191,9 +191,5 @@ async function getUpdatedQueue(roomCode: string) {
     return queue;
 
 }
-
-
-
-
 
 export {joinRoom, LeaveRoom, searchSong, addToQueue, upvoteSong}

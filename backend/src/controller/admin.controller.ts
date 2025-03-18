@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { createRoom, deleteRoom } from "../services/admin.service";
+import { cancelJoiningRoom, createRoom, deleteRoom } from "../services/admin.service";
 
 async function createRoomApi(req:Request, res: Response){
     try{
@@ -8,6 +8,22 @@ async function createRoomApi(req:Request, res: Response){
         res.status(201).json({
             roomCode,
             message: 'Room Created Successfully'
+        })
+    }
+    catch(error:unknown){
+        if(error instanceof Error){
+            res.status(500).json({
+                message: error.message
+            })
+        }
+    }
+}
+
+async function cancelJoiningRoomApi(req: Request, res:Response){
+    try{
+        await cancelJoiningRoom(req);
+        res.status(201).json({
+            message: 'Room removed successfully'
         })
     }
     catch(error:unknown){
@@ -36,4 +52,4 @@ async function deleteRoomApi(req: Request, res:Response){
     }
 }
 
-export {createRoomApi, deleteRoomApi}
+export {createRoomApi, cancelJoiningRoomApi, deleteRoomApi}

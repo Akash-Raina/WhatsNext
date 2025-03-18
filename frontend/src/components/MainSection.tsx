@@ -1,59 +1,95 @@
-import { useState } from "react"
-import { Button } from "./Button"
+import { useState } from "react";
+import { Button } from "./Button";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useWebSocket } from "../context/WebSocketContext";
 
-const MainSection = ()=>{
+const MainSection = () => {
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [roomCode, setRoomCode] = useState("");
+  const [isRoomCreated, setIsRoomCreated] = useState(false);
+  const navigate = useNavigate();
+  const {connectWebSocket} = useWebSocket();
 
-    const BASE_URL = import.meta.env.VITE_BACKEND_URL
-    const [isModelOpen, setIsModelOpen] = useState(true);
-    const [roomCode, setRoomCode] = useState("");
-    const [isRoomCode, setIsRoomCode] = useState(false);
-    const navigate = useNavigate();
-
-    const createRoom = async ()=>{
-        const response = await axios.post(`${BASE_URL}/create-room`);
-        setRoomCode(response?.data.roomCode);
-        setIsRoomCode(true);
-        setIsModelOpen(true);
+  const handleCreateRoom = async () => {
+    try {
+      const response = await axios.post(`${BASE_URL}/create-room`);
+      setRoomCode(response?.data.roomCode);
+      setIsRoomCreated(true);
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error("Error creating room:", error);
     }
+  };
 
-    const joinRoom = async()=>{
-        setRoomCode("");
-        setIsRoomCode(false);
-        setIsModelOpen(true);
-        
+  const handleJoinRoom = () => {
+    setRoomCode("");
+    setIsRoomCreated(false);
+    setIsModalOpen(true);
+  };
+
+  const handleCancel = async () => {
+    if (isRoomCreated) {
+      try {
+        await axios.delete(`${BASE_URL}/cancel-room`, {
+          data: { roomCode: roomCode },
+        });
+      } catch (error) {
+        console.error("Error cancelling room:", error);
+      }
     }
+    setIsModalOpen(false);
+    setRoomCode("");
+    setIsRoomCreated(false);
+  };
 
-    return <div className="flex border h-[90%] w-screen flex-col justify-center items-center">
-        <h1 className=" h-36 font-bold text-4xl">
-            Basic UI for v1 will update Later
-        </h1>
-        <div className="flex gap-3">
-            <Button value="Create Room" onclick={createRoom}/>
-            <Button value="Join Room" onclick={joinRoom}/>
+  const handleJoin = async () => {
+    try {
+      const response = await axios.post(`${BASE_URL}/join-room`, {
+        roomCode,
+      });
+      setIsModalOpen(false);
+      if (response) {
+        connectWebSocket(roomCode)
+        navigate(`/${roomCode}`);
+      }
+      console.log("Join response:", response.data);
+    } catch (error) {
+      console.error("Error joining room:", error);
+    }
+  };
+
+  return (
+    <div className="flex h-[90%] w-screen flex-col items-center justify-center border">
+      <h1 className="h-36 text-4xl font-bold">
+        Basic UI for v1 - Will Update Later
+      </h1>
+      <div className="flex gap-3">
+        <Button value="Create Room" onclick={handleCreateRoom} />
+        <Button value="Join Room" onclick={handleJoinRoom} />
+      </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center">
+          <div className="w-80 transform rounded-lg bg-white p-6 text-center shadow-lg transition-all scale-100">
+            <input
+              type="text"
+              className="bg-black text-amber-400 w-full mb-4 p-2 rounded"
+              value={roomCode}
+              onChange={(e) => !isRoomCreated && setRoomCode(e.target.value)}
+              readOnly={isRoomCreated}
+              placeholder={isRoomCreated ? "Your Room Code" : "Enter Room Code"}
+            />
+            <div className="flex justify-center gap-3">
+              <Button value="Cancel" onclick={handleCancel} />
+              <Button value="Join" onclick={handleJoin} />
+            </div>
+          </div>
         </div>
-        {
-            isModelOpen && (
-                <div className="fixed inset-0 flex items-center justify-center ">
-                    <div className="bg-white p-6 rounded-lg shadow-lg w-80 text-center transform transition-all scale-100">
-                    {isRoomCode ? <input type="text" className="bg-black text-amber-400" value={roomCode} readOnly/> : <input type="text" className="bg-black text-amber-400" value={roomCode} onChange={(e)=>setRoomCode(e.target.value)}/>}
-                    <div className="flex gap-3 justify-center mt-4">
-                            <Button value="Cancel" onclick={()=>{setIsModelOpen(false)}}/>
-                            <Button value="Join" onclick={async()=>{setIsModelOpen(false)
-                                const response = await axios.post(`${BASE_URL}/join-room`, {
-                                    roomCode
-                                });
-                                if(response)
-                                    navigate(`/${roomCode}`)
-                                console.log('response', response.data);
-                            }}/>
-                    </div>
-                    </div>
-                </div>
-            )
-        }
+      )}
     </div>
-}
+  );
+};
 
-export default MainSection
+export default MainSection;
