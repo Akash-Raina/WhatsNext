@@ -33,7 +33,7 @@ export const userAuth = async( req: Request, res: Response, next: NextFunction)=
 
     const {roomCode} = req.body;
     const userFingerPrint = getUserFingerprint(req);
-
+    console.log('userfingerprint', userFingerPrint)
     const roomKey = `room:${roomCode}`;
 
     const roomExists = await redisClient.exists(roomKey);

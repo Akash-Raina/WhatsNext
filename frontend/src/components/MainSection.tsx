@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Button } from "./Button";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useWebSocket } from "../context/WebSocketContext";
+import { useUser } from "../context/WhoJoinedContext";
+// import { useWebSocket } from "../context/WebSocketContext";
 
 const MainSection = () => {
   const BASE_URL = import.meta.env.VITE_BACKEND_URL;
@@ -10,7 +11,8 @@ const MainSection = () => {
   const [roomCode, setRoomCode] = useState("");
   const [isRoomCreated, setIsRoomCreated] = useState(false);
   const navigate = useNavigate();
-  const {connectWebSocket} = useWebSocket();
+  const {setUser} = useUser();
+  // const {connectWebSocket} = useWebSocket();
 
   const handleCreateRoom = async () => {
     try {
@@ -51,7 +53,8 @@ const MainSection = () => {
       });
       setIsModalOpen(false);
       if (response) {
-        connectWebSocket(roomCode)
+        setUser(response.data.whoJoined.user)
+        // connectWebSocket(roomCode)
         navigate(`/${roomCode}`);
       }
       console.log("Join response:", response.data);

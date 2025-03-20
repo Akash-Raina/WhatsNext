@@ -13,7 +13,6 @@ export const authenticateWebSocket = async (req: IncomingMessage) => {
 
     const fingerPrintId =  getWsUserFingerprint(req);
     
-    console.log('fingerprint', fingerPrintId);
     if (!fingerPrintId || Array.isArray(fingerPrintId)) {
         console.log("Fingerprint ID is missing");
         return false;

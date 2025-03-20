@@ -9,7 +9,7 @@ app.use(express.json());
 app.use(cors());
 app.use('/api/v1', next)
 
-const httpServer = app.listen(8080);
+const httpServer = app.listen(8080,"0.0.0.0");
 
 const wss = new WebSocketServer({server: httpServer});
 

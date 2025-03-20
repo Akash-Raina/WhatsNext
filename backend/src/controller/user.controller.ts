@@ -22,10 +22,10 @@ async function LeaveRoomApi(req: Request, res:Response){
 
 async function joinRoomApi(req: Request, res: Response){
     try{
-        const fingerprintId = await joinRoom(req);
+        const whoJoined = await joinRoom(req);
 
         res.status(201).json({
-            fingerprintId,
+            whoJoined,
             message: 'Joined successfully'
         })
     }

@@ -1,6 +1,8 @@
 import { useState, useEffect, ChangeEvent, useMemo } from "react";
 import debounce from "lodash/debounce";
 import axios from "axios";
+import { IoIosAddCircle } from "react-icons/io";
+import { useParams } from "react-router-dom";
 
 interface SongResult {
   id: string;
@@ -15,6 +17,7 @@ const SearchNavbar = () => {
   const [songName, setSongName] = useState<string>("");
   const [searchResults, setSearchResults] = useState<SongResult[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const {roomCode} = useParams()
 
   const searchSongs = useMemo(
     () =>
@@ -60,6 +63,15 @@ const SearchNavbar = () => {
     setSongName(value);
     searchSongs(value);
   };
+
+
+  const addToQueue = async(result:SongResult)=>{
+    // if(result){
+    //   await axios.post(`${BACKEND_URL}/add-to-queue`, {roomCode, song: result})
+    // }
+    setSongName("");
+    setSearchResults([]);
+  }
 
   return (
     <div className="w-full max-w-2xl mx-auto p-4">
@@ -113,7 +125,9 @@ const SearchNavbar = () => {
                 <p className="text-gray-800 font-medium">{result.title}</p>
                 <p className="text-gray-600 text-sm">{result.channel}</p>
               </div>
+              <IoIosAddCircle size={28} className="mb-2 ml-5" onClick={()=>addToQueue(result)}/>
             </div>
+            
           ))}
         </div>
       )}

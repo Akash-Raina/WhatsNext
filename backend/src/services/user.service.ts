@@ -38,7 +38,10 @@ async function joinRoom(req: CustomRequest){
             throw new Error('Admin is already in room')
         }
         await redisClient.sAdd(`${roomKey}:users`, adminFingerPrint);
-        return adminFingerPrint;
+        return {
+            id: adminFingerPrint,
+            user: 'Admin'
+        };
     }
 
     const userExists = await redisClient.sIsMember(`${roomKey}:users`, userFingerPrintId);
@@ -47,7 +50,10 @@ async function joinRoom(req: CustomRequest){
     }
 
     await redisClient.sAdd(`${roomKey}:users`, userFingerPrintId);
-    return userFingerPrintId
+    return {
+        id: userFingerPrintId,
+        user: 'User'
+    }
 }
 
 async function LeaveRoom(req: CustomRequest){
@@ -183,6 +189,8 @@ async function getUpdatedQueue(roomCode: string) {
             return {
                 id: songId,
                 title: songData.title || "Unknown Title",
+                channel: songData.channel || "Unknown Channel",
+                thumbnail: songData.thumbnail || null,
                 upvotes: songData.upvotes ? Number(songData.upvotes) : 0, 
             };
         })
