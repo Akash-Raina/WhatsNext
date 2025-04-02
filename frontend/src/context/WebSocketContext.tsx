@@ -39,6 +39,8 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
 
     newSocket.onopen = () => {
       console.log("WebSocket connection established");
+
+      newSocket.send(JSON.stringify({ type: "requestQueue", roomCode }));
     };
     newSocket.onclose = () => {
       console.log("WebSocket connection closed");

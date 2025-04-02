@@ -11,6 +11,6 @@ export interface Song {
     thumbnail: string | null;
     channel: string;
     upvotes: number;
-    upvotedBy: string;
+    upvotedBy?: string;
   }
   

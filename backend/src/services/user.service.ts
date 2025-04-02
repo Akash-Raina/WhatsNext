@@ -179,7 +179,7 @@ async function upvoteSong(req: Request) {
 }
 
 
-async function getUpdatedQueue(roomCode: string) {
+export async function getUpdatedQueue(roomCode: string) {
     const queueKey = `queue:${roomCode}`;
     const songIds = await redisClient.lRange(queueKey, 0, -1);
 

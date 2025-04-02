@@ -1,19 +1,16 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useWebSocket } from "../context/WebSocketContext";
 import { BiUpvote } from "react-icons/bi";
+import axios from "axios";
+import { useParams } from "react-router-dom";
+import { useSongs } from "../context/SongsListContext";
 
-interface Song {
-  id: string;
-  title: string;
-  thumbnail: string | null;
-  channel: string;
-  upvotes: number;
-  upvotedBy: string;
-}
 
 const SongsQueue = () => {
   const { socket } = useWebSocket();
-  const [songs, setSongs] = useState<Song[]>([]);
+  const {songs, setSongs} = useSongs();
+  const {roomCode} = useParams();
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
   useEffect(() => {
     if (!socket) return;
@@ -37,6 +34,19 @@ const SongsQueue = () => {
       socket.onmessage = null; 
     };
   }, [socket]);
+
+  const upvoteSong = async(songId: string)=>{
+    try{
+      const response = await axios.put(`${BASE_URL}/upvote-song`, {
+        roomCode, songId
+      });
+      console.log(response.data.message);
+    }
+    catch(error:unknown){
+      console.error("Error joining room:", error);
+    }
+    
+  }
 
   return (
     <div>
@@ -64,7 +74,7 @@ const SongsQueue = () => {
                 </p>
                 <p className="text-sm">Upvotes: {song.upvotes}</p>
               </div>
-              <BiUpvote size={25}/>
+              <BiUpvote size={25} onClick={()=>upvoteSong(song.id)}/>
             </li>
           ))}
         </ul>

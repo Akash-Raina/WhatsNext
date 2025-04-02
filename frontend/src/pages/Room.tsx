@@ -1,6 +1,6 @@
 import axios from "axios"
 import { Button } from "../components/Button"
-// import MusicPlayer from "../components/MusicPlayer"
+import MusicPlayer from "../components/MusicPlayer"
 import RoomNavbar from "../components/RoomNavbar"
 import SongsQueue from "../components/SongsQueue"
 import { useNavigate, useParams } from "react-router-dom"
@@ -24,7 +24,7 @@ const Room = ()=>{
         <div className="flex flex-col justify-around items-center h-[75%]">
             <div className="flex justify-around items-center h-full w-screen">
                 <SongsQueue/>
-                {/* <MusicPlayer videoId="XTp5jaRU3Ws"/> */}
+                <MusicPlayer/>
             </div>
             {user === 'Admin' ? <Button value="Delete" onclick={leaveRoom}/> : <Button value="Leave" onclick={leaveRoom}/>}
         </div>
