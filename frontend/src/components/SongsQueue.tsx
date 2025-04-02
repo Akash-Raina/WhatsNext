@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useWebSocket } from "../context/WebSocketContext";
 import { BiUpvote } from "react-icons/bi";
 
-// Define the Song type based on what your backend sends
 interface Song {
   id: string;
   title: string;
@@ -14,7 +13,7 @@ interface Song {
 
 const SongsQueue = () => {
   const { socket } = useWebSocket();
-  const [songs, setSongs] = useState<Song[]>([]); 
+  const [songs, setSongs] = useState<Song[]>([]);
 
   useEffect(() => {
     if (!socket) return;

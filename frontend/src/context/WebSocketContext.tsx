@@ -15,7 +15,22 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const BASE_WS_URL = import.meta.env.VITE_WEBSOCKET_URL as string; 
 
+  useEffect(()=>{
+    const storedRoomCode = localStorage.getItem("roomCode");
+    
+    if(storedRoomCode)
+        connectWebSocket(storedRoomCode);
+
+    return ()=>{
+      if(socket){
+        socket.close();
+      }
+    }
+  }, [])
+
   const connectWebSocket = (roomCode: string): WebSocket => {
+
+    localStorage.setItem('roomCode', roomCode);
     if (socket) {
       socket.close();
     }
@@ -24,9 +39,6 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
 
     newSocket.onopen = () => {
       console.log("WebSocket connection established");
-    };
-    newSocket.onmessage = (event: MessageEvent) => {
-      console.log("Message from server:", event.data);
     };
     newSocket.onclose = () => {
       console.log("WebSocket connection closed");
