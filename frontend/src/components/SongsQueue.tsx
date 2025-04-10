@@ -4,10 +4,11 @@ import { BiUpvote } from "react-icons/bi";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import { useSongs } from "../context/SongsListContext";
-
+import { useUser } from "../context/WhoJoinedContext";
 
 const SongsQueue = () => {
   const { socket } = useWebSocket();
+  const {setUser} = useUser();
   const {songs, setSongs} = useSongs();
   const {roomCode} = useParams();
   const BASE_URL = import.meta.env.VITE_BACKEND_URL;
@@ -21,7 +22,10 @@ const SongsQueue = () => {
         console.log("New message received:", message);
 
         if (message.type === "queueUpdate" && Array.isArray(message.queue)) {
-          setSongs(message.queue); 
+          setSongs(message.queue);
+        }
+        if (message.type === "whoAmI") {
+          setUser(message.whoAmI)
         }
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
