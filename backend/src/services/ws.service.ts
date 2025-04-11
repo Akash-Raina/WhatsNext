@@ -4,6 +4,7 @@ import {IncomingMessage} from 'http'
 import { authenticateWebSocket } from "../middlewares/authenticateWebsocket";
 import { Song } from "../types/customRequest";
 import { getUpdatedQueue } from "./user.service";
+import redisClient from "../config/redisClient";
 
 interface RoomData{
   client: Set<WebSocket>,
@@ -18,8 +19,8 @@ export const handleWebSocketConnection = async(ws: WebSocket, req: IncomingMessa
   const roomCode = params.get("roomcode");
   const username = req.headers["username"] || "unknown";
 
-  const authenticated = await authenticateWebSocket(req);
-  if (!authenticated) {
+  const {user, isJoined} = await authenticateWebSocket(req);
+  if (!isJoined) {
     ws.close(1008, "Authentication failed");
     return;
 }
@@ -36,7 +37,6 @@ export const handleWebSocketConnection = async(ws: WebSocket, req: IncomingMessa
   }
 
   const room = rooms.get(roomCode);
-  console.log(room);
   if(!room) return;
 
   room.client.add(ws);
@@ -44,22 +44,33 @@ export const handleWebSocketConnection = async(ws: WebSocket, req: IncomingMessa
   const updatedQueue = await getUpdatedQueue(roomCode)
   
   ws.send(JSON.stringify({type:"queueUpdate", queue: updatedQueue}));
+  ws.send(JSON.stringify({type:"whoAmI", whoAmI: user}))
 
-//   ws.on("message", async (data) => {
-//     try {
-//       const message = JSON.parse(data.toString());
-  
-//       if (message.type === "requestQueue") {
-//         const roomCode = message.roomCode;
-//         const queue = await getUpdatedQueue(roomCode);
-  
-//         ws.send(JSON.stringify({ type: "queueUpdate", queue }));
-//       }
-//     }
-//     catch (error) {
-//       console.error("Error processing WebSocket message:", error);
-//     }
-// });
+  ws.on("message", async(data)=>{
+    try{
+      const message = JSON.parse(data.toString());
+
+      if(message.type === 'songEnded'){
+        const { roomCode, songId } = message;
+        const room = rooms.get(roomCode);
+        if (!room) return;
+
+        const queueKey = `queue:${roomCode}`;
+        const roomQueueKey = `${queueKey}:${songId}`;
+        const response = await redisClient.del(roomQueueKey);
+        const queueResponse = await redisClient.lRem(queueKey, 0, songId)
+        console.log('queueResponse', queueResponse)
+        if(queueResponse){
+          const updatedQueue = await getUpdatedQueue(roomCode)
+
+          ws.send(JSON.stringify({type:"queueUpdate", queue: updatedQueue}));
+        }
+      }
+    }
+    catch (error) {
+      console.error("Error processing WebSocket message:", error);
+    }
+  })
 
   ws.on("close", () => {
 

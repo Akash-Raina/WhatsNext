@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSongs } from "../context/SongsListContext";
+import { useWebSocket } from "../context/WebSocketContext";
 
 declare global {
   interface Window {
@@ -10,11 +11,14 @@ declare global {
 
 const YouTubePlayer = () => {
   const { songs } = useSongs();
-  const [currentSongIndex, setCurrentSongIndex] = useState(0);
-  const [player, setPlayer] = useState<YT.Player | null>(null);
+  // const [currentSong, setCurrentSong] = useState(songs[0]);
+  const {socket} = useWebSocket();
+
+  console.log("songs", songs);
 
   useEffect(() => {
     if (songs.length === 0) return;
+    console.log('rerendered')
 
     const tag = document.createElement("script");
     tag.src = "https://www.youtube.com/iframe_api";
@@ -23,18 +27,21 @@ const YouTubePlayer = () => {
 
     window.onYouTubeIframeAPIReady = () => {
       new window.YT.Player("youtube-player", {
-        videoId: songs[currentSongIndex].id,
+        videoId: songs[0].id,
         playerVars: {
-          playsinline: 1, // Important for mobile playback
+          playsinline: 1,
         },
         events: {
           onReady: (event) => {
             event.target.playVideo();
-            setPlayer(event.target);
           },
           onStateChange: (event) => {
             if (event.data === window.YT.PlayerState.ENDED) {
-              playNextSong();
+              socket?.send(JSON.stringify({
+                type: 'songEnded',
+                songId: songs[0].id,
+                roomCode: localStorage.getItem("roomCode")
+              }))
             }
           },
         },
@@ -46,15 +53,7 @@ const YouTubePlayer = () => {
     };
   }, [songs]);
 
-  useEffect(() => {
-    if (player && songs[currentSongIndex]) {
-      player.loadVideoById(songs[currentSongIndex].id);
-    }
-  }, [currentSongIndex, player]); 
 
-  const playNextSong = () => {
-    setCurrentSongIndex((prevIndex) => (prevIndex + 1 < songs.length ? prevIndex + 1 : 0));
-  };
 
   return <div id="youtube-player"></div>;
 };
