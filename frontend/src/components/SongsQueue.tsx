@@ -1,20 +1,17 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useWebSocket } from "../context/WebSocketContext";
 import { BiUpvote } from "react-icons/bi";
-
-// Define the Song type based on what your backend sends
-interface Song {
-  id: string;
-  title: string;
-  thumbnail: string | null;
-  channel: string;
-  upvotes: number;
-  upvotedBy: string;
-}
+import axios from "axios";
+import { useParams } from "react-router-dom";
+import { useSongs } from "../context/SongsListContext";
+import { useUser } from "../context/WhoJoinedContext";
 
 const SongsQueue = () => {
   const { socket } = useWebSocket();
-  const [songs, setSongs] = useState<Song[]>([]); 
+  const {setUser} = useUser();
+  const {songs, setSongs} = useSongs();
+  const {roomCode} = useParams();
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
   useEffect(() => {
     if (!socket) return;
@@ -25,7 +22,10 @@ const SongsQueue = () => {
         console.log("New message received:", message);
 
         if (message.type === "queueUpdate" && Array.isArray(message.queue)) {
-          setSongs(message.queue); 
+          setSongs(message.queue);
+        }
+        if (message.type === "whoAmI") {
+          setUser(message.whoAmI)
         }
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
@@ -38,6 +38,19 @@ const SongsQueue = () => {
       socket.onmessage = null; 
     };
   }, [socket]);
+
+  const upvoteSong = async(songId: string)=>{
+    try{
+      const response = await axios.put(`${BASE_URL}/upvote-song`, {
+        roomCode, songId
+      });
+      console.log(response.data.message);
+    }
+    catch(error:unknown){
+      console.error("Error joining room:", error);
+    }
+    
+  }
 
   return (
     <div>
@@ -65,7 +78,7 @@ const SongsQueue = () => {
                 </p>
                 <p className="text-sm">Upvotes: {song.upvotes}</p>
               </div>
-              <BiUpvote size={25}/>
+              <BiUpvote size={25} onClick={()=>upvoteSong(song.id)}/>
             </li>
           ))}
         </ul>

@@ -3,7 +3,7 @@ import { Button } from "./Button";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/WhoJoinedContext";
-// import { useWebSocket } from "../context/WebSocketContext";
+import { useWebSocket } from "../context/WebSocketContext";
 
 const MainSection = () => {
   const BASE_URL = import.meta.env.VITE_BACKEND_URL;
@@ -12,7 +12,7 @@ const MainSection = () => {
   const [isRoomCreated, setIsRoomCreated] = useState(false);
   const navigate = useNavigate();
   const {setUser} = useUser();
-  // const {connectWebSocket} = useWebSocket();
+  const {connectWebSocket} = useWebSocket();
 
   const handleCreateRoom = async () => {
     try {
@@ -54,7 +54,7 @@ const MainSection = () => {
       setIsModalOpen(false);
       if (response) {
         setUser(response.data.whoJoined.user)
-        // connectWebSocket(roomCode)
+        connectWebSocket(roomCode)
         navigate(`/${roomCode}`);
       }
       console.log("Join response:", response.data);
