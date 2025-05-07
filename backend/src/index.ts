@@ -1,24 +1,16 @@
-import express from "express"
+import express, {Request, Response} from "express"
+import cors from 'cors'
 import {WebSocketServer, WebSocket} from 'ws'
+import next from './routes/index'
+import { handleWebSocketConnection } from "./services/ws.service";
 
 const app = express();
-
 app.use(express.json());
+app.use(cors());
+app.use('/api/v1', next)
 
-const httpServer = app.listen(8080);
+const httpServer = app.listen(8080,"0.0.0.0");
 
 const wss = new WebSocketServer({server: httpServer});
 
-wss.on('connection', function connection(socket){
-    socket.on('error', (error)=>console.error(error));
-
-    socket.on('message', function message(data, isBinary){
-        wss.clients.forEach(function each(client){
-            if(client.readyState === WebSocket.OPEN){
-                client.send(data, {binary: isBinary})
-            }
-        })
-    })
-
-    socket.send('Hello! Message From Server');
-})
+wss.on("connection", handleWebSocketConnection)
