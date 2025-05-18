@@ -46,6 +46,8 @@ export const handleWebSocketConnection = async(ws: WebSocket, req: IncomingMessa
   ws.send(JSON.stringify({type:"queueUpdate", queue: updatedQueue}));
   ws.send(JSON.stringify({type:"whoAmI", whoAmI: user}))
 
+  broadcastUserCount(roomCode);
+
   ws.on("message", async(data)=>{
     try{
       const message = JSON.parse(data.toString());
@@ -78,12 +80,19 @@ export const handleWebSocketConnection = async(ws: WebSocket, req: IncomingMessa
 
     room.client.delete(ws);
 
+    broadcastUserCount(roomCode);
+
     if (room.client.size === 0) {
       rooms.delete(roomCode);
     }
   });
 
 };
+
+export function getUserCountInRoom(roomCode: string): number {
+  const room = rooms.get(roomCode);
+  return room ? room.client.size : 0;
+}
 
 export function broadcastQueueUpdate(roomCode: string, queue: Song[]) {
 
@@ -95,5 +104,18 @@ export function broadcastQueueUpdate(roomCode: string, queue: Song[]) {
             client.send(JSON.stringify({ type: "queueUpdate", queue }));
         }
     });
+}
+
+function broadcastUserCount(roomCode: string) {
+  const room = rooms.get(roomCode);
+  if (!room) return;
+
+  const count = room.client.size;
+
+  room.client.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify({ type: "userCountUpdate", count }));
+    }
+  });
 }
 

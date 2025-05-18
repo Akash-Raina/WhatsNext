@@ -1,10 +1,14 @@
-import MainSection from "./MainSection"
+import Hero from "./Hero"
+import HowItWorks from "./HowItWorks"
 import Navbar from "./Navbar"
+import PageDescription from "./PageDescription"
 
 const LandingPage = ()=>{
-    return <div className="flex flex-col h-screen w-screen">
+    return <div className="flex flex-col h-full w-full overflow-x-hidden">
         <Navbar/>
-        <MainSection/>
+        <Hero/>
+        <PageDescription/>
+        <HowItWorks/>
     </div>
 }
 

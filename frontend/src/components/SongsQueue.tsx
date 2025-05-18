@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useWebSocket } from "../context/WebSocketContext";
-import { BiUpvote } from "react-icons/bi";
+import { MdDelete } from "react-icons/md";
+import { BiUpvote, BiSolidUpvote } from "react-icons/bi";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import { useSongs } from "../context/SongsListContext";
@@ -8,79 +9,105 @@ import { useUser } from "../context/WhoJoinedContext";
 
 const SongsQueue = () => {
   const { socket } = useWebSocket();
-  const {setUser} = useUser();
-  const {songs, setSongs} = useSongs();
-  const {roomCode} = useParams();
+  const { user, setUser } = useUser();
+  const { songs, setSongs } = useSongs();
+  const { roomCode } = useParams();
   const BASE_URL = import.meta.env.VITE_BACKEND_URL;
+
+  const [upvotedSongs, setUpvotedSongs] = useState<string[]>([]); // track upvoted song IDs
 
   useEffect(() => {
     if (!socket) return;
 
     const handleMessage = (event: MessageEvent) => {
       try {
-        const message = JSON.parse(event.data); 
-        console.log("New message received:", message);
-
+        const message = JSON.parse(event.data);
         if (message.type === "queueUpdate" && Array.isArray(message.queue)) {
           setSongs(message.queue);
         }
         if (message.type === "whoAmI") {
-          setUser(message.whoAmI)
+          setUser(message.whoAmI);
         }
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
       }
     };
 
-    socket.onmessage = handleMessage;
-
-    return () => {
-      socket.onmessage = null; 
-    };
+    socket.addEventListener("message", handleMessage);
+    return () => socket.removeEventListener("message", handleMessage);
   }, [socket]);
 
-  const upvoteSong = async(songId: string)=>{
-    try{
-      const response = await axios.put(`${BASE_URL}/upvote-song`, {
-        roomCode, songId
-      });
-      console.log(response.data.message);
+  const upvoteSong = async (songId: string) => {
+    try {
+      await axios.put(`${BASE_URL}/upvote-song`, { roomCode, songId });
+
+      // toggle upvote state visually
+      setUpvotedSongs((prev) =>
+        prev.includes(songId)
+          ? prev.filter((id) => id !== songId)
+          : [...prev, songId]
+      );
+    } catch (error) {
+      console.error("Error upvoting song:", error);
     }
-    catch(error:unknown){
-      console.error("Error joining room:", error);
-    }
-    
-  }
+  };
 
   return (
-    <div>
-      <h2>Song Queue</h2>
+    <div className="w-full p-4 bg-white rounded-xl shadow-md">
+      <h2 className="font-bold text-2xl mb-4">Up Next</h2>
       {songs.length === 0 ? (
-        <p>No songs in queue yet.</p>
+        <p className="text-gray-500">No songs in queue yet.</p>
       ) : (
-        <ul className="space-y-4">
-          {songs.map((song) => (
-            <li
-              key={song.id}
-              className="flex items-center gap-4 p-2 border rounded-lg"
-            >
-              {song.thumbnail && (
-                <img
-                  src={song.thumbnail}
-                  alt={song.title}
-                  className="w-12 h-12 object-cover rounded"
-                />
-              )}
-              <div className="border">
-                <p className="font-medium">{song.title || "Unknown Title"}</p>
-                <p className="text-sm text-gray-600">
-                  {song.channel || "Unknown Channel"}
-                </p>
-                <p className="text-sm">Upvotes: {song.upvotes}</p>
-              </div>
-              <BiUpvote size={25} onClick={()=>upvoteSong(song.id)}/>
-            </li>
-          ))}
+        <ul className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+          {songs.map((song) => {
+            const isUpvoted = upvotedSongs.includes(song.id);
+            return (
+              <li
+                key={song.id}
+                className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg hover:shadow transition"
+              >
+                {song.thumbnail && (
+                  <img
+                    src={song.thumbnail}
+                    alt={song.title}
+                    className="w-14 h-14 object-cover rounded-md"
+                  />
+                )}
+                <div className="flex flex-col overflow-hidden">
+                  <p className="font-semibold truncate">{song.title || "Unknown Title"}</p>
+                  <p className="text-sm text-gray-600 truncate">
+                    {song.channel || "Unknown Channel"}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 ml-auto">
+                  <span className="text-sm text-gray-700">+{song.upvotes}</span>
+                  <button onClick={() => upvoteSong(song.id)} title="Upvote">
+                    {isUpvoted ? (
+                      <BiSolidUpvote className="text-blue-600" size={24} />
+                    ) : (
+                      <BiUpvote className="text-blue-600" size={24} />
+                    )}
+                  </button>
+                  {user === "Admin" && (
+                    <button
+                      title="Delete"
+                      onClick={() => {
+                        socket?.send(
+                          JSON.stringify({
+                            type: "songEnded",
+                            songId: song.id,
+                            roomCode,
+                          })
+                        );
+                      }}
+                    >
+                      <MdDelete className="text-red-500 hover:text-red-700" size={24} />
+                    </button>
+                  )}
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

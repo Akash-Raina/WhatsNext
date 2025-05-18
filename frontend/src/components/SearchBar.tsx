@@ -1,4 +1,4 @@
-import { useState, useEffect, ChangeEvent, useMemo } from "react";
+import { useState, useEffect, ChangeEvent, useMemo, useRef } from "react";
 import debounce from "lodash/debounce";
 import axios from "axios";
 import { IoIosAddCircle } from "react-icons/io";
@@ -11,13 +11,20 @@ interface SongResult {
   channel: string;
 }
 
+interface Props {
+  visible: boolean;
+  onClose?: () => void;
+}
+
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
-const SearchNavbar = () => {
-  const [songName, setSongName] = useState<string>("");
+const SearchNavbar = ({ visible, onClose }: Props) => {
+  const [songName, setSongName] = useState("");
   const [searchResults, setSearchResults] = useState<SongResult[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const {roomCode} = useParams()
+  const [isLoading, setIsLoading] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const { roomCode } = useParams();
 
   const searchSongs = useMemo(
     () =>
@@ -26,22 +33,13 @@ const SearchNavbar = () => {
           setSearchResults([]);
           return;
         }
-
         try {
           setIsLoading(true);
-          const response = await axios.post(
-            `${BACKEND_URL}/search`,
-            {},
-            {
-              headers: {
-                "Content-Type": "application/json",
-              },
-              params: { query },
-            }
-          );
-
-          const data = response.data.data;
-          setSearchResults(data || []);
+          const response = await axios.post(`${BACKEND_URL}/search`, {}, {
+            headers: { "Content-Type": "application/json" },
+            params: { query },
+          });
+          setSearchResults(response.data.data || []);
         } catch (error) {
           console.error("Error searching songs:", error);
           setSearchResults([]);
@@ -52,66 +50,61 @@ const SearchNavbar = () => {
     []
   );
 
+  useEffect(() => () => searchSongs.cancel(), [searchSongs]);
+
   useEffect(() => {
-    return () => {
-      searchSongs.cancel();
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        setIsModalVisible(false);
+        setSongName("");
+        setSearchResults([]);
+        onClose?.();
+      }
     };
-  }, [searchSongs]);
+    if (isModalVisible) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isModalVisible, onClose]);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSongName(value);
+    setIsModalVisible(true);
     searchSongs(value);
   };
 
-
-  const addToQueue = async(result:SongResult)=>{
-    if(result){
-      await axios.post(`${BACKEND_URL}/add-to-queue`, {roomCode, song: result})
+  const addToQueue = async (result: SongResult) => {
+    if (result) {
+      await axios.post(`${BACKEND_URL}/add-to-queue`, { roomCode, song: result });
     }
+    setIsModalVisible(false);
     setSongName("");
     setSearchResults([]);
-  }
+    onClose?.();
+  };
 
-  return (
-    <div className="w-full max-w-2xl mx-auto p-4">
-      <div className="relative">
-        <input
-          type="text"
-          value={songName}
-          onChange={handleInputChange}
-          placeholder="Search songs..."
-          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
-        />
-        {isLoading && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            <svg
-              className="animate-spin h-5 w-5 text-gray-500"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-              />
-            </svg>
-          </div>
-        )}
-      </div>
+  if (!visible) return null;
 
-      {searchResults.length > 0 && (
-        <div className="mt-2 bg-white rounded-lg shadow-lg border border-gray-200 max-h-64 overflow-y-auto">
-          {searchResults.map((result) => (
+return (
+  <div className="w-full max-w-2xl mx-auto p-4 relative" ref={modalRef}>
+    <input
+      type="text"
+      value={songName}
+      onChange={handleInputChange}
+      placeholder="Search for songs..."
+      className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
+      autoFocus
+    />
+
+    {isModalVisible && (
+      <div
+        className="absolute top-16 left-1/2 -translate-x-1/2 w-[95%] max-h-[70vh] bg-white border border-gray-300 rounded-lg shadow-xl overflow-y-auto z-50"
+      >
+        {isLoading ? (
+          <p className="p-4 text-gray-500">Loading...</p>
+        ) : searchResults.length > 0 ? (
+          searchResults.map((result) => (
             <div
               key={result.id}
               className="px-4 py-2 hover:bg-gray-100 cursor-pointer border-b last:border-b-0 flex items-center gap-4"
@@ -121,18 +114,26 @@ const SearchNavbar = () => {
                 alt={result.title}
                 className="w-12 h-12 object-cover rounded"
               />
-              <div>
-                <p className="text-gray-800 font-medium">{result.title}</p>
-                <p className="text-gray-600 text-sm">{result.channel}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-gray-800 font-medium truncate">{result.title}</p>
+                <p className="text-gray-600 text-sm truncate">{result.channel}</p>
               </div>
-              <IoIosAddCircle size={28} className="mb-2 ml-5" onClick={()=>addToQueue(result)}/>
+              <div className="w-7 h-7 flex items-center justify-center flex-shrink-0 ml-auto">
+                <IoIosAddCircle
+                  size={28}
+                  className="text-blue-500 hover:text-blue-700 cursor-pointer"
+                  onClick={() => addToQueue(result)}
+                />
+              </div>
             </div>
-            
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
+          ))
+        ) : (
+          <p className="p-4 text-gray-500">No results found.</p>
+        )}
+      </div>
+    )}
+  </div>
+);
+}
 
 export default SearchNavbar;
