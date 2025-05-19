@@ -20,10 +20,17 @@ export const handleWebSocketConnection = async(ws: WebSocket, req: IncomingMessa
   const username = req.headers["username"] || "unknown";
 
   const {user, isJoined} = await authenticateWebSocket(req);
+
+  const interval = setInterval(() => {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.ping();
+    }
+  }, 30000); // every 30 seconds
+
   if (!isJoined) {
     ws.close(1008, "Authentication failed");
     return;
-}
+  }
 
   if (!roomCode) {
     ws.close();
@@ -77,6 +84,8 @@ export const handleWebSocketConnection = async(ws: WebSocket, req: IncomingMessa
   ws.on("close", () => {
 
     console.log(`User ${username} left room: ${roomCode}`);
+
+    clearInterval(interval)
 
     room.client.delete(ws);
 
