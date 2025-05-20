@@ -42,8 +42,8 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
 
       newSocket.send(JSON.stringify({ type: "requestQueue", roomCode }));
     };
-    newSocket.onclose = () => {
-      console.log("WebSocket connection closed");
+    newSocket.onclose = (event) => {
+      console.log("WebSocket connection closed", event.code, event.reason);
     };
     newSocket.onerror = (error: Event) => {
       console.error("WebSocket error:", error);

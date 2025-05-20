@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-import { createServer } from "http";
 import { WebSocketServer } from "ws";
 import next from "./routes/index";
 import { handleWebSocketConnection } from "./services/ws.service";
@@ -13,27 +12,12 @@ app.use(cors({
 }));
 app.use('/api/v1', next);
 
-// 👇 Create a raw HTTP server
-const server = createServer(app);
-
-// 👇 Create WebSocket server
-const wss = new WebSocketServer({ noServer: true });
-
-// 👇 Handle upgrade requests on `/ws`
-server.on("upgrade", (req, socket, head) => {
-  const { url } = req;
-  if (url?.startsWith("/ws")) {
-    wss.handleUpgrade(req, socket, head, (ws) => {
-      wss.emit("connection", ws, req);
-    });
-  } else {
-    socket.destroy(); // Reject other upgrade paths
-  }
+const port: number = process.env.PORT && !isNaN(parseInt(process.env.PORT, 10))
+  ? parseInt(process.env.PORT, 10)
+  : 8000;
+const httpServer = app.listen(port, "0.0.0.0", () => {
+  console.log(`Server running on port ${port}`);
 });
+const wss = new WebSocketServer({ server: httpServer });
 
 wss.on("connection", handleWebSocketConnection);
-
-// 👇 Start listening
-server.listen(8000, "0.0.0.0", () => {
-  console.log("Server running on port 8080");
-});
