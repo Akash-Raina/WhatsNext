@@ -12,7 +12,7 @@ export const authenticateWebSocket = async (req: IncomingMessage) => {
     }
 
     const fingerPrintId =  getWsUserFingerprint(req);
-    
+    console.log("Fingerprint ID:", fingerPrintId);
     if (!fingerPrintId || Array.isArray(fingerPrintId)) {
         console.log("Fingerprint ID is missing");
         return whoJoined;
@@ -28,8 +28,10 @@ export const authenticateWebSocket = async (req: IncomingMessage) => {
 
     const adminFingerPrint = await redisClient.hGet(roomKey, "adminFingerPrintId");
     if (fingerPrintId === adminFingerPrint) {
+        console.log("User is admin");
         const adminExists = await redisClient.sIsMember(`${roomKey}:users`, adminFingerPrint);
         if (adminExists) {
+            console.log("Admin is already a member of this room");
             whoJoined = {user: 'Admin', isJoined: true}
             return whoJoined;
         }
