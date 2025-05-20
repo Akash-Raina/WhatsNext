@@ -1,5 +1,4 @@
   import { WebSocket, WebSocketServer } from "ws";
-  import getUserFingerprint from "../utils/userFingerPrint";
   import {IncomingMessage} from 'http'
   import { authenticateWebSocket } from "../middlewares/authenticateWebsocket";
   import { Song } from "../types/customRequest";
@@ -27,7 +26,7 @@
     }
 
     if (!roomCode) {
-      ws.close(1008,"Room code is required");
+      ws.close(1000,"Room code is required");
       return;
     }
 

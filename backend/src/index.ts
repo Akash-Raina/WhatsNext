@@ -12,6 +12,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+app.set("trust proxy", true);
 app.use('/api/v1', next);
 
 const port: number = process.env.PORT && !isNaN(parseInt(process.env.PORT, 10))

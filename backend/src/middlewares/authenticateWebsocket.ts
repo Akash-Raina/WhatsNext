@@ -1,6 +1,6 @@
 import { IncomingMessage } from "http";
 import redisClient from "../config/redisClient";
-import getUserFingerprint, { getWsUserFingerprint } from "../utils/userFingerPrint";
+import { getUserFingerprint } from "../utils/userFingerPrint";
 
 export const authenticateWebSocket = async (req: IncomingMessage) => {
     const params = new URLSearchParams(req.url?.split("?")[1]);
@@ -11,7 +11,7 @@ export const authenticateWebSocket = async (req: IncomingMessage) => {
         return whoJoined;
     }
 
-    const fingerPrintId =  getWsUserFingerprint(req);
+    const fingerPrintId =  getUserFingerprint(req);
     console.log("Fingerprint ID:", fingerPrintId);
     if (!fingerPrintId || Array.isArray(fingerPrintId)) {
         console.log("Fingerprint ID is missing");
