@@ -1,6 +1,6 @@
 import redisClient from "../config/redisClient";
 import { generateRoomCode } from "../utils/generateRoomCode";
-import getUserFingerprint from "../utils/userFingerPrint";
+import {getUserFingerprint} from "../utils/userFingerPrint";
 import { Request } from "express";
 
 async function createRoom(req: Request){

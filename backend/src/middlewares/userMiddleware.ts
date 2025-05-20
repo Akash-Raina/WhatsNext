@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import redisClient from "../config/redisClient";
-import getUserFingerprint from "../utils/userFingerPrint";
+import {getUserFingerprint} from "../utils/userFingerPrint";
 import { CustomRequest } from "../types/customRequest";
 
 

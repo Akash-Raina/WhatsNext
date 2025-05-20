@@ -2,7 +2,7 @@ import {Request} from 'express'
 import dotenv from 'dotenv'
 import { WebSocket } from "ws";
 import { generateRoomCode } from '../utils/generateRoomCode';
-import getUserFingerprint from '../utils/userFingerPrint';
+import {getUserFingerprint} from '../utils/userFingerPrint';
 import { createClient } from 'redis';
 import redisClient from '../config/redisClient';
 import axios from 'axios';
