@@ -3,6 +3,7 @@ import { useWebSocket } from "../context/WebSocketContext";
 import SearchNavbar from "./SearchBar";
 import { useParams } from "react-router-dom";
 import { FiSearch } from "react-icons/fi";
+import ApiLimitWarning from "./ApiLimitWarning";
 
 const RoomNavbar = () => {
   const { socket } = useWebSocket();
@@ -50,6 +51,7 @@ const RoomNavbar = () => {
         <div className="bg-gray-100 px-3 py-1 rounded-md">
           <span className="text-xs font-mono">ROOM: {roomCode}</span>
         </div>
+        <ApiLimitWarning/>
       </div>
 
       {showSearch && (
