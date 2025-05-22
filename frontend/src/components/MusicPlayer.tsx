@@ -12,22 +12,32 @@ declare global {
 const YouTubePlayer = () => {
   const { songs } = useSongs();
   const [currentSong, setCurrentSong] = useState(songs[0]);
+  const [hasStarted, setHasStarted] = useState(false); // Prevent current song from being updated mid-play
   const currentSongRef = useRef(currentSong);
   const playerRef = useRef<YT.Player | null>(null);
   const { socket } = useWebSocket();
 
+  // Keep currentSongRef in sync
   useEffect(() => {
     currentSongRef.current = currentSong;
+    console.log("currentSongRef", currentSongRef.current);
   }, [currentSong]);
 
+  // Update currentSong only if no song is playing yet or the song has ended
   useEffect(() => {
-    if (!currentSong && songs[0]) setCurrentSong(songs[0]);
-    else if (currentSong?.id !== songs[0]?.id) setCurrentSong(songs[0]);
-  }, [songs]);
+    console.log("songs", songs);
+    if (!hasStarted && songs[0] && (!currentSong || currentSong?.id !== songs[0]?.id)) {
+      console.log("Setting current song:", songs[0]);
+      setCurrentSong(songs[0]);
+    }
+  }, [songs, hasStarted, currentSong]);
 
+  // Load YouTube iframe API
   useEffect(() => {
+    console.log("Loading YouTube Iframe API",songs[0]);
     if (!songs[0]) return;
 
+    console.log("YouTube Iframe API loaded");
     if (!document.getElementById("youtube-iframe-api")) {
       const tag = document.createElement("script");
       tag.id = "youtube-iframe-api";
@@ -42,7 +52,9 @@ const YouTubePlayer = () => {
     };
   }, [currentSong]);
 
+  // Load new video when currentSong changes
   useEffect(() => {
+    console.log("Loading new video:", currentSong);
     if (currentSong && playerRef.current) {
       playerRef.current.loadVideoById(currentSong.id);
     }
@@ -57,7 +69,10 @@ const YouTubePlayer = () => {
       videoId: currentSong?.id,
       playerVars: { playsinline: 1, autoplay: 1, controls: 1 },
       events: {
-        onReady: (event) => event.target.playVideo(),
+        onReady: (event) => {
+          setHasStarted(true);
+          event.target.playVideo();
+        },
         onStateChange: (event) => {
           if (event.data === window.YT.PlayerState.ENDED) {
             const roomCode = localStorage.getItem("roomCode");
@@ -70,6 +85,8 @@ const YouTubePlayer = () => {
                 roomCode,
               })
             );
+
+            setHasStarted(false); // Allow the next song to be picked
           }
         },
         onError: (event) => console.error("YouTube Player Error:", event.data),

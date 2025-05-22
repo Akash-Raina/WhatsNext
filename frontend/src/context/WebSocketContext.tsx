@@ -12,6 +12,7 @@ interface WebSocketProviderProps {
 }
 
 export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
+  const uid = localStorage.getItem("uid");
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const BASE_WS_URL = import.meta.env.VITE_WEBSOCKET_URL as string; 
 
@@ -34,7 +35,8 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
     if (socket) {
       socket.close();
     }
-    const newSocket = new WebSocket(`${BASE_WS_URL}?roomcode=${roomCode}`);
+    const newSocket = new WebSocket(`${BASE_WS_URL}?roomcode=${roomCode}&uid=${uid}`);
+
     setSocket(newSocket);
 
     newSocket.onopen = () => {

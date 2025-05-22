@@ -4,8 +4,10 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/WhoJoinedContext";
 import { useWebSocket } from "../context/WebSocketContext";
+import { v4 as uuidv4 } from 'uuid';
 
 const Hero = () => {
+  let uid = localStorage.getItem('uid');
   const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [roomCode, setRoomCode] = useState("");
@@ -14,9 +16,21 @@ const Hero = () => {
   const { setUser } = useUser();
   const { connectWebSocket } = useWebSocket();
 
+  if(!uid) {
+    uid = uuidv4();
+    localStorage.setItem("uid", uid);
+  }
+
   const handleCreateRoom = async () => {
+    
     try {
-      const response = await axios.post(`${BASE_URL}/create-room`);
+      const response = await axios.post(`${BASE_URL}/create-room`,{},
+        {
+          headers: {
+            'x-uid': uid,
+          }
+        }
+      );
       setRoomCode(response?.data.roomCode);
       setIsRoomCreated(true);
       setIsModalOpen(true);
@@ -35,8 +49,12 @@ const Hero = () => {
     if (isRoomCreated) {
       try {
         await axios.delete(`${BASE_URL}/cancel-room`, {
-          data: { roomCode: roomCode },
-        });
+          data: { roomCode },
+          headers: {
+            'x-uid': uid,
+          },
+      });
+
       } catch (error) {
         console.error("Error cancelling room:", error);
       }
@@ -50,7 +68,11 @@ const Hero = () => {
     try {
       const response = await axios.post(`${BASE_URL}/join-room`, {
         roomCode,
-      });
+      },
+      {
+      headers: {
+        'x-uid': uid,
+      }});
       setIsModalOpen(false);
       if (response) {
         setUser(response.data.whoJoined.user);

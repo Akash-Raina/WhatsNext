@@ -42,7 +42,6 @@
     room.client.add(ws);
 
     const updatedQueue = await getUpdatedQueue(roomCode)
-    
     ws.send(JSON.stringify({type:"queueUpdate", queue: updatedQueue}));
     ws.send(JSON.stringify({type:"whoAmI", whoAmI: user}))
 

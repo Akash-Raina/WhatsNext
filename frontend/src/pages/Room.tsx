@@ -11,11 +11,14 @@ const Room = () => {
   const { roomCode } = useParams();
   const navigate = useNavigate();
   const { user } = useUser();
-
+  const uid = localStorage.getItem("uid");
   const leaveRoom = async () => {
     try {
-      const response = await axios.delete(`${BASE_URL}/leave-room`, {
-        data: { roomCode: roomCode },
+      const response = await axios.delete(`${BASE_URL}/leave-room`,{
+        data: { roomCode },
+        headers: {
+          'x-uid': uid,
+        },
       });
       if (response) {
         navigate("/");

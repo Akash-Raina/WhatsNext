@@ -25,6 +25,7 @@ const SearchNavbar = ({ visible, onClose }: Props) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
   const { roomCode } = useParams();
+  const uid = localStorage.getItem("uid");
 
   const searchSongs = useMemo(
     () =>
@@ -76,7 +77,11 @@ const SearchNavbar = ({ visible, onClose }: Props) => {
 
   const addToQueue = async (result: SongResult) => {
     if (result) {
-      await axios.post(`${BACKEND_URL}/add-to-queue`, { roomCode, song: result });
+      await axios.post(`${BACKEND_URL}/add-to-queue`, { roomCode, song: result },{
+        headers:{
+          'x-uid': uid
+        },
+      });
     }
     setIsModalVisible(false);
     setSongName("");

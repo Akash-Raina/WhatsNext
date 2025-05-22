@@ -25,7 +25,6 @@ async function createRoom(req: Request){
 }
 
 async function cancelJoiningRoom(req: Request){
-    console.log('api called')
     const {roomCode} = req.body;
     if(!roomCode){
         throw new Error('Room Code is required')
