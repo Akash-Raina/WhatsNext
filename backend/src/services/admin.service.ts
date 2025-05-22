@@ -51,8 +51,7 @@ async function cancelJoiningRoom(req: Request){
 }
 
 async function deleteRoom(req:Request) {
-    const params = new URLSearchParams(req.url?.split("?")[1]);
-    const uniqueRoomCode = params.get('roomcode')          
+    const uniqueRoomCode = req.body.roomCode         
     if (!uniqueRoomCode) {
         throw new Error("Room code is required!");
     }

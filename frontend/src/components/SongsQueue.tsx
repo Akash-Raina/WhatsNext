@@ -38,10 +38,14 @@ const SongsQueue = () => {
   }, [socket]);
 
   const upvoteSong = async (songId: string) => {
+    const uid = localStorage.getItem("uid");
     try {
-      await axios.put(`${BASE_URL}/upvote-song`, { roomCode, songId });
+      await axios.put(`${BASE_URL}/upvote-song`, { roomCode, songId }, {
+        headers: {
+          "x-uid": uid,
+        },
+      });
 
-      // toggle upvote state visually
       setUpvotedSongs((prev) =>
         prev.includes(songId)
           ? prev.filter((id) => id !== songId)

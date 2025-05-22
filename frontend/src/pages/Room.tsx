@@ -27,6 +27,22 @@ const Room = () => {
       console.error("Error leaving room:", error);
     }
   };
+    const deleteRoom = async () => {
+      try{ 
+        const response = await axios.delete(`${BASE_URL}/delete-room`,{
+          data: { roomCode },
+          headers: {
+            'x-uid': uid,
+          },
+        });
+        if (response) {
+          navigate("/");
+        }
+      }
+      catch (error) {
+        console.error("Error deleting room:", error);
+      }
+  };
 
   return (
     <div className="min-h-screen bg-[#f6f3ff] overflow-x-hidden">
@@ -53,7 +69,7 @@ const Room = () => {
         <div className="flex justify-end">
           <Button
             value={user === "Admin" ? "Delete Room" : "Leave Room"}
-            onclick={leaveRoom}
+            onclick={user === "Admin" ? deleteRoom : leaveRoom}
           />
         </div>
       </div>
