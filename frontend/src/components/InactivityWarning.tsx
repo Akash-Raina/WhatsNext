@@ -31,6 +31,10 @@ const InactivityWarning = () => {
             This app is hosted on a free-tier server. If it hasn't been used in a while,
             the backend takes time to wake up. Expect an initial delay of <strong>up to 50 seconds</strong>.
           </p>
+           <p className="mb-2 text-[13px] text-gray-700 mt-2">
+            <strong className="text-red-500">Note for Admins:</strong> If you're joining to control playback, please use a desktop or laptop.
+            YouTube API may not function properly on mobile browsers. Users can join from any device.
+          </p>
         </div>
       )}
     </div>

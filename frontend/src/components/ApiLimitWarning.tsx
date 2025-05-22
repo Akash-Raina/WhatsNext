@@ -19,6 +19,10 @@ const ApiLimitWarning = () => {
           <p>
             If you're getting <strong>"No results found"</strong> while searching for songs, it's likely because we've temporarily hit the request limit for the YouTube API.
           </p>
+          <p className="mb-2 text-[13px] text-gray-700 mt-2">
+            <strong>Note for Admins:</strong> If you're joining to control playback, please use a desktop or laptop.
+            YouTube API may not function properly on mobile browsers. Users can join from any device.
+          </p>
           <button
             className="mt-3 px-3 py-1 text-sm cursor-pointer
              bg-amber-600 hover:bg-amber-700 text-white rounded"
