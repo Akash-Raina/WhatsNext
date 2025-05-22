@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Menu, X } from "lucide-react"; // Icons (install lucide-react if needed)
+import InactivityWarning from "./InactivityWarning";
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -25,7 +26,8 @@ const Navbar = () => {
         <div className="hidden md:flex gap-10 text-md font-bold">
           <span className="text-[#4b5563] cursor-pointer" onClick={() => handleScroll(800)}>How it Works</span>
           <span className="text-[#4b5563] cursor-pointer" onClick={() => handleScroll(1500)}>Features</span>
-          <span className="text-[#4b5563] cursor-pointer" onClick={() => handleScroll(0)}>FAQ</span>
+          <InactivityWarning/>
+
         </div>
 
         {/* Mobile Menu Icon */}
