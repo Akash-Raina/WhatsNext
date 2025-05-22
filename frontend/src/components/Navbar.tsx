@@ -43,7 +43,7 @@ const Navbar = () => {
         <div className="md:hidden px-5 pt-4 pb-2 space-y-3 text-md font-bold bg-[#F5F0FF]">
           <span className="block text-[#4b5563] cursor-pointer" onClick={() => handleScroll(800)}>How it Works</span>
           <span className="block text-[#4b5563] cursor-pointer" onClick={() => handleScroll(1500)}>Features</span>
-          <span className="block text-[#4b5563] cursor-pointer">FAQ</span>
+          <InactivityWarning/>
         </div>
       )}
     </nav>
