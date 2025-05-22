@@ -4,7 +4,7 @@
 
 ## 🌐 Live Demo
 
-Try out the live version here: [https://whats-next-navy.vercel.app](https://whatsnext-app.vercel.app)
+Try out the live version here: [https://whats-next-navy.vercel.app](https://whats-next-navy.vercel.app)
 
 📝 **How to Use:**
 - Click "Create Room" to generate a unique room code.
